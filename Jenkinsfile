@@ -11,7 +11,7 @@ agent any
 
                 script{
                           sh 'export ANSIBLE_HOST_KEY_CHECKING=False'
-                          sh 'sudo ansible-playbook -i ${DEPLOY_ENDPOINT}, setup.yml --extra-vars="ansible_ssh_private_key_file=/home/ucp/proj/key0.pem ansible_user=ec2-user" '
+                          sh 'ansible-playbook -i ${DEPLOY_ENDPOINT}, setup.yml --extra-vars="ansible_ssh_private_key_file=/home/ucp/proj/key0.pem ansible_user=ec2-user" '
                       
                         }                   
 
