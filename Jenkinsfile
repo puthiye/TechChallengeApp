@@ -18,7 +18,6 @@ agent any
                 }
             }
 
-        }
 
 
       stage("docker build image") {
@@ -63,6 +62,5 @@ agent any
       }
     }
 
-
+ }
 }
-
