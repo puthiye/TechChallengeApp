@@ -31,13 +31,13 @@ agent any
                       }                   
 
                 }
-            }
-
-        }
+      }
 
 
       stage("docker build image") {
+
       steps {
+
         script {
 
           //credentials -> username + password
@@ -60,7 +60,9 @@ agent any
 
 
      stage("docker run containers") {
-      steps {
+
+     steps {
+
         script {
     
                    sshagent(credentials: ['dev-ssh']) {
@@ -75,4 +77,3 @@ agent any
 
   } //end of stages
 } //end of pipeline
-
