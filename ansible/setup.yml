@@ -1,0 +1,46 @@
+--- 
+- 
+  become: true
+  hosts: all
+  tasks: 
+    - 
+      name: "Installing Docker Prerequisite packages on RHEL"
+      with_items: 
+        - yum-utils
+        - device-mapper-persistent-data
+        - lvm2
+      yum: 
+        name: "{{ item }}"
+        state: latest
+    - 
+      name: "Configuring docker-ce repo"
+      get_url: 
+        dest: /etc/yum.repos.d/docker-ce.repo
+        mode: 0644
+        url: "https://download.docker.com/linux/centos/docker-ce.repo"
+
+    -
+      name: "Install docker dependency"
+      yum:
+        name: https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm
+        state: present
+      
+    -
+      name: "Install Docker ce"
+      dnf:
+        name: docker-ce
+        state: latest
+        skip_broken: yes
+
+    - 
+      name: "Starting and Enabling Docker service"
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    -
+      name: "Install git"
+      yum:
+        name: git
+        state: present
