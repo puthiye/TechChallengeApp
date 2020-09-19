@@ -70,7 +70,7 @@ agent any
                                                            AWS_REGION=ap-southeast-2 \
                                                            /usr/local/bin/aws ec2 describe-instances --filters \"Name=tag:Name,Values=demo-asg\" | grep PublicIpAddress") 
                         
-                                                           DEPLOY_ENDPOINT = "${result}".tokenize(':')[1].replaceAll("\"","").replaceAll("\\s","")
+                                                           DEPLOY_ENDPOINT = "${result}".tokenize(':')[1].minus(",").replaceAll("\\s","")
                                                            println("EC2 public ip=${DEPLOY_ENDPOINT}")  
                                     }
                            }
