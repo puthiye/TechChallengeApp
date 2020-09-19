@@ -10,50 +10,132 @@ Running on Jenkins in /var/lib/jenkins/workspace/deploy-docker-image
 [Pipeline] checkout
 The recommended git tool is: git
 using credential GIT_CREDS
-Cloning the remote Git repository
-Cloning repository https://github.com/puthiye/TechChallengeApp.git
- > git init /var/lib/jenkins/workspace/deploy-docker-image # timeout=10
+ > git rev-parse --is-inside-work-tree # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/puthiye/TechChallengeApp.git # timeout=10
 Fetching upstream changes from https://github.com/puthiye/TechChallengeApp.git
  > git --version # timeout=10
  > git --version # 'git version 2.23.0'
 using GIT_ASKPASS to set credentials git pass
  > git fetch --tags --force --progress -- https://github.com/puthiye/TechChallengeApp.git +refs/heads/*:refs/remotes/origin/* # timeout=10
- > git config remote.origin.url https://github.com/puthiye/TechChallengeApp.git # timeout=10
- > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
-Avoid second fetch
  > git rev-parse refs/remotes/origin/master^{commit} # timeout=10
  > git rev-parse refs/remotes/origin/origin/master^{commit} # timeout=10
-Checking out Revision fedaa434080dd12e03eb14ced8aa3b2c24b5ca3a (refs/remotes/origin/master)
+Checking out Revision 6de2401fbc61592a446bc1d5c32112d138f9c653 (refs/remotes/origin/master)
  > git config core.sparsecheckout # timeout=10
- > git checkout -f fedaa434080dd12e03eb14ced8aa3b2c24b5ca3a # timeout=10
-Commit message: "ANSIBLE_HOST_KEY_CHECKING=False added"
- > git rev-list --no-walk c41b395516b6fcd08bc8c7270dd1985f0e0debb7 # timeout=10
+ > git checkout -f 6de2401fbc61592a446bc1d5c32112d138f9c653 # timeout=10
+Commit message: "Increased sleep timer"
+ > git rev-list --no-walk 310fff8d8ad752f092831f867be7d8759f87d315 # timeout=10
 [Pipeline] }
 [Pipeline] // stage
 [Pipeline] withEnv
 [Pipeline] {
 [Pipeline] stage
+[Pipeline] { (infra setup)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] withCredentials
+Masking supported pattern matches of $AWS_ACCESS_KEY_ID or $AWS_SECRET_ACCESS_KEY
+[Pipeline] {
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/deploy-docker-image/terraform
+[Pipeline] {
+[Pipeline] sh
++ terraform init
+
+[0m[1mInitializing the backend...[0m
+
+[0m[1mInitializing provider plugins...[0m
+- Using previously-installed hashicorp/aws v3.7.0
+
+The following providers do not have any version constraints in configuration,
+so the latest version was installed.
+
+To prevent automatic upgrades to new major versions that may contain breaking
+changes, we recommend adding version constraints in a required_providers block
+in your configuration, with the constraint strings suggested below.
+
+* hashicorp/aws: version = "~> 3.7.0"
+
+[0m[1m[32mTerraform has been successfully initialized![0m[32m[0m
+[0m[32m
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.[0m
+[Pipeline] sh
++ terraform apply -auto-approve=true
+[0m[1maws_default_vpc.default: Creating...[0m[0m
+[0m[1maws_default_subnet.default: Creating...[0m[0m
+[0m[1maws_security_group.elb-sg-sample: Creating...[0m[0m
+[0m[1maws_default_subnet.default: Creation complete after 1s [id=subnet-d28cb49b][0m[0m
+[0m[1maws_security_group.elb-sg-sample: Creation complete after 2s [id=sg-04474c76017b2263c][0m[0m
+[0m[1maws_elb.elb-sample: Creating...[0m[0m
+[0m[1maws_launch_configuration.launch-config-sample: Creating...[0m[0m
+[0m[1maws_default_vpc.default: Creation complete after 2s [id=vpc-b02600d7][0m[0m
+[0m[1maws_launch_configuration.launch-config-sample: Creation complete after 1s [id=terraform-20200919065535077900000001][0m[0m
+[0m[1maws_elb.elb-sample: Creation complete after 2s [id=elb-demo][0m[0m
+[0m[1maws_autoscaling_group.asg-sample: Creating...[0m[0m
+[0m[1maws_autoscaling_group.asg-sample: Still creating... [10s elapsed][0m[0m
+[0m[1maws_autoscaling_group.asg-sample: Still creating... [20s elapsed][0m[0m
+[0m[1maws_autoscaling_group.asg-sample: Still creating... [30s elapsed][0m[0m
+[0m[1maws_autoscaling_group.asg-sample: Creation complete after 39s [id=tf-asg-20200919065537594400000002][0m[0m
+[0m[1m[32m
+Apply complete! Resources: 6 added, 0 changed, 0 destroyed.[0m
+[0m[1m[32m
+Outputs:
+
+elb_dns_name = elb-demo-1696799604.ap-southeast-2.elb.amazonaws.com[0m
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (retrieve ec2 public ip)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] withCredentials
+Masking supported pattern matches of $AWS_ACCESS_KEY_ID or $AWS_SECRET_ACCESS_KEY
+[Pipeline] {
+[Pipeline] sh
++ AWS_ACCESS_KEY_ID=****
++ AWS_SECRET_ACCESS_KEY=****
++ AWS_REGION=ap-southeast-2
++ /usr/local/bin/aws ec2 describe-instances --filters Name=tag:Name,Values=demo-asg
++ grep PublicIpAddress
+[Pipeline] echo
+EC2 public ip="54.252.225.196"
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
 [Pipeline] { (install docker/git - rhel)
 [Pipeline] script
 [Pipeline] {
 [Pipeline] withCredentials
-Masking supported pattern matches of $mySecretFile
+Masking supported pattern matches of $mySecret
 [Pipeline] {
-[Pipeline] sh
-++ cat ****
-+ echo 'Copy the content to /tmp location '
-Copy the content to /tmp location 
-+ chmod 700 /tmp/key.file
-[Pipeline] }
-[Pipeline] // withCredentials
+[Pipeline] echo
+Wait for 2min for ssh service to come up...
+[Pipeline] sleep
+Sleeping for 2 min 0 sec
 [Pipeline] sh
 + ANSIBLE_HOST_KEY_CHECKING=False
-+ ansible-playbook -i 3.25.93.37, ./ansible/setup.yml '--extra-vars=ansible_ssh_private_key_file=/tmp/key.file ansible_user=ec2-user'
++ ansible-playbook -i 54.252.225.196, ./ansible/setup.yml --private-key **** --extra-vars=ansible_user=ec2-user
 
 PLAY [all] *********************************************************************
 
 TASK [Gathering Facts] *********************************************************
-ok: [3.25.93.37]
+ok: [54.252.225.196]
 
 TASK [Installing Docker Prerequisite packages on RHEL] *************************
 [DEPRECATION WARNING]: Invoking "yum" only once while using a loop via 
@@ -62,32 +144,28 @@ and specifying `name: "{{ item }}"`, please use `name: ['yum-utils', 'device-
 mapper-persistent-data', 'lvm2']` and remove the loop. This feature will be 
 removed in version 2.11. Deprecation warnings can be disabled by setting 
 deprecation_warnings=False in ansible.cfg.
-changed: [3.25.93.37] => (item=['yum-utils', 'device-mapper-persistent-data', 'lvm2'])
+changed: [54.252.225.196] => (item=['yum-utils', 'device-mapper-persistent-data', 'lvm2'])
 
 TASK [Configuring docker-ce repo] **********************************************
-changed: [3.25.93.37]
+changed: [54.252.225.196]
 
 TASK [Install docker dependency] ***********************************************
-changed: [3.25.93.37]
+changed: [54.252.225.196]
 
 TASK [Install Docker ce] *******************************************************
-changed: [3.25.93.37]
+changed: [54.252.225.196]
 
 TASK [Starting and Enabling Docker service] ************************************
-changed: [3.25.93.37]
+changed: [54.252.225.196]
 
 TASK [Install git] *************************************************************
-changed: [3.25.93.37]
+changed: [54.252.225.196]
 
 PLAY RECAP *********************************************************************
-3.25.93.37                 : ok=7    changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+54.252.225.196             : ok=7    changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 
-[Pipeline] dir
-Running in /tmp/key.file
-[Pipeline] {
-[Pipeline] deleteDir
 [Pipeline] }
-[Pipeline] // dir
+[Pipeline] // withCredentials
 [Pipeline] }
 [Pipeline] // script
 [Pipeline] }
@@ -104,20 +182,20 @@ Masking supported pattern matches of $username or $password
 [ssh-agent] Looking for ssh-agent implementation...
 [ssh-agent]   Exec ssh-agent (binary ssh-agent on a remote machine)
 $ ssh-agent
-SSH_AUTH_SOCK=/tmp/ssh-BlaJeat53eRL/agent.35645
-SSH_AGENT_PID=35647
+SSH_AUTH_SOCK=/tmp/ssh-vHWXpTyBuh98/agent.20952
+SSH_AGENT_PID=20955
 Running ssh-add (command line suppressed)
-Identity added: /var/lib/jenkins/workspace/deploy-docker-image@tmp/private_key_528665420562628824.key (/var/lib/jenkins/workspace/deploy-docker-image@tmp/private_key_528665420562628824.key)
+Identity added: /var/lib/jenkins/workspace/deploy-docker-image@tmp/private_key_6998384987661795225.key (/var/lib/jenkins/workspace/deploy-docker-image@tmp/private_key_6998384987661795225.key)
 [ssh-agent] Started.
 [Pipeline] {
 [Pipeline] sh
-+ ssh -o StrictHostKeyChecking=no ec2-user@3.25.93.37 rm -rf TechChallengeApp
++ ssh -o StrictHostKeyChecking=no ec2-user@54.252.225.196 rm -rf TechChallengeApp
 [Pipeline] sh
-+ ssh -o StrictHostKeyChecking=no ec2-user@3.25.93.37 git clone https://github.com/****/TechChallengeApp.git
++ ssh -o StrictHostKeyChecking=no ec2-user@54.252.225.196 git clone https://github.com/****/TechChallengeApp.git
 Cloning into 'TechChallengeApp'...
 [Pipeline] sh
-+ ssh -o StrictHostKeyChecking=no ec2-user@3.25.93.37 sudo docker build /home/ec2-user/TechChallengeApp/ -t techchallengeapp
-Sending build context to Docker daemon  183.3kB
++ ssh -o StrictHostKeyChecking=no ec2-user@54.252.225.196 sudo docker build /home/ec2-user/TechChallengeApp/ -t techchallengeapp
+Sending build context to Docker daemon    212kB
 
 Step 1/18 : FROM golang:alpine AS build
 alpine: Pulling from library/golang
@@ -128,12 +206,12 @@ e871e8e8d7a9: Pulling fs layer
 e73272ec9a57: Pulling fs layer
 e871e8e8d7a9: Waiting
 e73272ec9a57: Waiting
+ed8968b2872e: Verifying Checksum
+ed8968b2872e: Download complete
 a92cc7c5fd73: Verifying Checksum
 a92cc7c5fd73: Download complete
 df20fa9351a1: Verifying Checksum
 df20fa9351a1: Download complete
-ed8968b2872e: Verifying Checksum
-ed8968b2872e: Download complete
 df20fa9351a1: Pull complete
 ed8968b2872e: Pull complete
 a92cc7c5fd73: Pull complete
@@ -147,7 +225,7 @@ Digest: sha256:4d8abd16b03209b30b48f69a2e10347aacf7ce65d8f9f685e8c3e20a512234d9
 Status: Downloaded newer image for golang:alpine
  ---> b3bc898ad092
 Step 2/18 : RUN apk add --no-cache curl git alpine-sdk
- ---> Running in be7a5af92ee6
+ ---> Running in e01824a7adcb
 fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/main/x86_64/APKINDEX.tar.gz
 fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/community/x86_64/APKINDEX.tar.gz
 (1/36) Installing fakeroot (1.24-r0)
@@ -162,8 +240,8 @@ fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/community/x86_64/APKINDEX.tar.g
 (10/36) Installing libstdc++ (9.3.0-r2)
 (11/36) Installing lzip (1.21-r0)
 (12/36) Installing nghttp2-libs (1.41.0-r0)
-(13/36) Installing libcurl (7.69.1-r0)
-(14/36) Installing curl (7.69.1-r0)
+(13/36) Installing libcurl (7.69.1-r1)
+(14/36) Installing curl (7.69.1-r1)
 (15/36) Installing abuild (3.6.0-r0)
 Executing abuild-3.6.0-r0.pre-install
 (16/36) Installing binutils (2.34-r1)
@@ -189,120 +267,120 @@ Executing abuild-3.6.0-r0.pre-install
 (36/36) Installing alpine-sdk (1.0-r0)
 Executing busybox-1.31.1-r16.trigger
 OK: 224 MiB in 51 packages
-Removing intermediate container be7a5af92ee6
- ---> cd5b5e824c1c
+Removing intermediate container e01824a7adcb
+ ---> b591cf0b16a2
 Step 3/18 : ARG SWAGGER_UI_VERSION=3.20.9
- ---> Running in fd05481bed59
-Removing intermediate container fd05481bed59
- ---> 940438e1e027
+ ---> Running in 490d51bb49de
+Removing intermediate container 490d51bb49de
+ ---> f57ade5ee0ff
 Step 4/18 : RUN go get -d -v github.com/go-swagger/go-swagger     && cd $GOPATH/src/github.com/go-swagger/go-swagger     && go mod tidy     && go install github.com/go-swagger/go-swagger/cmd/swagger     && curl -sfL https://github.com/swagger-api/swagger-ui/archive/v$SWAGGER_UI_VERSION.tar.gz | tar xz -C /tmp/     && mv /tmp/swagger-ui-$SWAGGER_UI_VERSION /tmp/swagger     && sed -i 's#"https://petstore\.swagger\.io/v2/swagger\.json"#"./swagger.json"#g' /tmp/swagger/dist/index.html
- ---> Running in 1039f47e9309
+ ---> Running in 231fe12fa44b
 [91mgithub.com/go-swagger/go-swagger (download)
+[0m[91mgo: downloading github.com/go-openapi/swag v0.19.9
+[0m[91mgo: downloading github.com/go-swagger/scan-repo-boundary v0.0.0-20180623220736-973b3573c013
+[0m[91mgo: downloading github.com/go-openapi/runtime v0.19.22-0.20200916161045-0f43ad21da65
+go: downloading golang.org/x/net v0.0.0-20200707034311-ab3426394381
+[0m[91mgo: downloading github.com/spf13/pflag v1.0.5
 [0m[91mgo: downloading golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
-[0m[91mgo: downloading github.com/go-openapi/runtime v0.19.20
-[0m[91mgo: downloading gopkg.in/yaml.v2 v2.3.0
-[0m[91mgo: downloading github.com/go-openapi/validate v0.19.10
+[0m[91mgo: downloading github.com/go-openapi/strfmt v0.19.5
+[0m[91mgo: downloading github.com/mailru/easyjson v0.7.1
+[0m[91mgo: downloading github.com/stretchr/testify v1.6.1
 [0m[91mgo: downloading github.com/spf13/viper v1.7.0
 [0m[91mgo: downloading github.com/jessevdk/go-flags v1.4.0
-[0m[91mgo: downloading github.com/hashicorp/hcl v1.0.0
-[0m[91mgo: downloading github.com/go-openapi/spec v0.19.8
-[0m[91mgo: downloading github.com/go-openapi/swag v0.19.9
-[0m[91mgo: downloading github.com/go-openapi/loads v0.19.5
-[0m[91mgo: downloading github.com/go-openapi/strfmt v0.19.5
-[0m[91mgo: downloading github.com/go-openapi/analysis v0.19.10
+[0m[91mgo: downloading github.com/docker/go-units v0.4.0
 [0m[91mgo: downloading go.mongodb.org/mongo-driver v1.3.5
-[0m[91mgo: downloading github.com/go-swagger/scan-repo-boundary v0.0.0-20180623220736-973b3573c013
-[0m[91mgo: downloading github.com/spf13/pflag v1.0.5
-go: downloading github.com/pkg/errors v0.9.1
-[0m[91mgo: downloading github.com/go-openapi/errors v0.19.6
-[0m[91mgo: downloading github.com/coreos/go-oidc v2.2.1+incompatible
-go: downloading github.com/spf13/cast v1.3.1
-[0m[91mgo: downloading github.com/magiconair/properties v1.8.1
-[0m[91mgo: downloading github.com/mitchellh/mapstructure v1.3.2
-[0m[91mgo: downloading github.com/spf13/afero v1.3.2
-[0m[91mgo: downloading golang.org/x/net v0.0.0-20200707034311-ab3426394381
-[0m[91mgo: downloading github.com/go-openapi/jsonreference v0.19.4
-[0m[91mgo: downloading github.com/dgrijalva/jwt-go v3.2.0+incompatible
-[0m[91mgo: downloading github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
-[0m[91mgo: downloading github.com/toqueteos/webbrowser v1.2.0
-[0m[91mgo: downloading github.com/go-openapi/jsonpointer v0.19.3
-[0m[91mgo: downloading golang.org/x/text v0.3.3
-[0m[91mgo: downloading github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35
-go: downloading gopkg.in/ini.v1 v1.57.0
-[0m[91mgo: downloading golang.org/x/mod v0.3.0
-[0m[91mgo: downloading github.com/go-openapi/inflect v0.19.0
-[0m[91mgo: downloading github.com/mailru/easyjson v0.7.1
-[0m[91mgo: downloading github.com/fsnotify/fsnotify v1.4.9
-[0m[91mgo: downloading github.com/stretchr/testify v1.6.1
-[0m[91mgo: downloading gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f
-[0m[91mgo: downloading gopkg.in/square/go-jose.v2 v2.5.1
-[0m[91mgo: downloading gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
-[0m[91mgo: downloading github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
-[0m[91mgo: downloading github.com/google/uuid v1.1.1
-[0m[91mgo: downloading github.com/gorilla/handlers v1.4.2
-[0m[91mgo: downloading golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-[0m[91mgo: downloading github.com/PuerkitoBio/purell v1.1.1
-[0m[91mgo: downloading github.com/kr/text v0.2.0
-[0m[91mgo: downloading github.com/go-stack/stack v1.8.0
 [0m[91mgo: downloading github.com/spf13/jwalterweatherman v1.1.0
 [0m[91mgo: downloading github.com/subosito/gotenv v1.2.0
-[0m[91mgo: downloading golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
-[0m[91mgo: downloading github.com/google/go-cmp v0.5.0
-[0m[91mgo: downloading github.com/kr/pretty v0.2.0
-[0m[91mgo: downloading github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
+[0m[91mgo: downloading github.com/hashicorp/hcl v1.0.0
 [0m[91mgo: downloading github.com/davecgh/go-spew v1.1.1
-[0m[91mgo: downloading github.com/docker/go-units v0.4.0
-[0m[91mgo: downloading github.com/tidwall/pretty v1.0.0
-[0m[91mgo: downloading golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-[0m[91mgo: downloading golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae
+[0m[91mgo: downloading github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 [0m[91mgo: downloading github.com/pelletier/go-toml v1.8.0
-[0m[91mgo: downloading github.com/smartystreets/goconvey v1.6.4
-[0m[91mgo: downloading github.com/BurntSushi/toml v0.3.1
-[0m[91mgo: downloading github.com/jtolds/gls v4.20.0+incompatible
+[0m[91mgo: downloading github.com/spf13/afero v1.3.2
+[0m[91mgo: downloading gopkg.in/ini.v1 v1.57.0
+[0m[91mgo: downloading github.com/go-openapi/analysis v0.19.10
+[0m[91mgo: downloading github.com/kr/pretty v0.2.0
+[0m[91mgo: downloading github.com/dgrijalva/jwt-go v3.2.0+incompatible
+[0m[91mgo: downloading github.com/go-openapi/loads v0.19.5
+[0m[91mgo: downloading github.com/coreos/go-oidc v2.2.1+incompatible
+[0m[91mgo: downloading github.com/google/uuid v1.1.1
 [0m[91mgo: downloading github.com/pmezard/go-difflib v1.0.0
-[0m[91mgo: downloading google.golang.org/appengine v1.6.6
+[0m[91mgo: downloading github.com/mitchellh/mapstructure v1.3.2
+[0m[91mgo: downloading github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35
+[0m[91mgo: downloading github.com/magiconair/properties v1.8.1
+[0m[91mgo: downloading golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+[0m[91mgo: downloading golang.org/x/text v0.3.3
+[0m[91mgo: downloading github.com/fsnotify/fsnotify v1.4.9
+[0m[91mgo: downloading gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
+[0m[91mgo: downloading github.com/smartystreets/goconvey v1.6.4
+[0m[91mgo: downloading github.com/pkg/errors v0.9.1
+[0m[91mgo: downloading gopkg.in/square/go-jose.v2 v2.5.1
+[0m[91mgo: downloading github.com/spf13/cast v1.3.1
+[0m[91mgo: downloading github.com/go-openapi/spec v0.19.8
+[0m[91mgo: downloading golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+[0m[91mgo: downloading golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae
+[0m[91mgo: downloading github.com/go-openapi/jsonpointer v0.19.3
+[0m[91mgo: downloading github.com/google/go-cmp v0.5.0
+go: downloading github.com/jtolds/gls v4.20.0+incompatible
+[0m[91mgo: downloading github.com/go-openapi/errors v0.19.7
+[0m[91mgo: downloading github.com/gorilla/handlers v1.4.2
 [0m[91mgo: downloading github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
+[0m[91mgo: downloading google.golang.org/appengine v1.6.6
 [0m[91mgo: downloading github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1
+[0m[91mgo: downloading github.com/go-openapi/inflect v0.19.0
+[0m[91mgo: downloading github.com/kr/text v0.2.0
+[0m[91mgo: downloading gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f
+[0m[91mgo: downloading github.com/BurntSushi/toml v0.3.1
+[0m[91mgo: downloading github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
+[0m[91mgo: downloading github.com/tidwall/pretty v1.0.0
 [0m[91mgo: downloading github.com/golang/protobuf v1.4.2
+[0m[91mgo: downloading golang.org/x/mod v0.3.0
+[0m[91mgo: downloading golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
+[0m[91mgo: downloading github.com/go-openapi/validate v0.19.11
+[0m[91mgo: downloading github.com/toqueteos/webbrowser v1.2.0
+[0m[91mgo: downloading gopkg.in/yaml.v2 v2.3.0
+[0m[91mgo: downloading github.com/go-openapi/jsonreference v0.19.4
+[0m[91mgo: downloading github.com/go-stack/stack v1.8.0
 [0m[91mgo: downloading google.golang.org/protobuf v1.25.0
-[0mRemoving intermediate container 1039f47e9309
- ---> fb9e3c3b70ac
+[0m[91mgo: downloading github.com/PuerkitoBio/purell v1.1.1
+[0m[91mgo: downloading github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
+[0mRemoving intermediate container 231fe12fa44b
+ ---> 4348eb02598c
 Step 5/18 : WORKDIR $GOPATH/src/github.com/servian/TechChallengeApp
- ---> Running in 12bd503437b5
-Removing intermediate container 12bd503437b5
- ---> 63408a529e66
+ ---> Running in edbe47930ae0
+Removing intermediate container edbe47930ae0
+ ---> 62a79a2d8582
 Step 6/18 : COPY go.mod go.sum $GOPATH/src/github.com/servian/TechChallengeApp/
- ---> d90c8f60555f
+ ---> 78430595a4f9
 Step 7/18 : RUN go mod tidy
- ---> Running in 65bcd79d33ed
-Removing intermediate container 65bcd79d33ed
- ---> 7969ab481be1
+ ---> Running in 742b0e18f310
+Removing intermediate container 742b0e18f310
+ ---> 48fe99b35c0a
 Step 8/18 : COPY . .
- ---> 6972187afa7a
+ ---> 7fa1f55a2758
 Step 9/18 : RUN go build -o /TechChallengeApp
- ---> Running in 9c389b5cc950
-[91mgo: downloading github.com/gorilla/mux v1.6.2
-[0m[91mgo: downloading github.com/lib/pq v0.0.0-20180327071824-d34b9ff171c2
+ ---> Running in 33e6f23a7dbf
+[91mgo: downloading github.com/lib/pq v0.0.0-20180327071824-d34b9ff171c2
 [0m[91mgo: downloading github.com/spf13/cobra v0.0.3
 [0m[91mgo: downloading github.com/spf13/viper v1.0.2
-[0m[91mgo: downloading github.com/magiconair/properties v1.8.0
-go: downloading github.com/fsnotify/fsnotify v1.4.7
-go: downloading github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce
-go: downloading github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec
+[0m[91mgo: downloading github.com/gorilla/mux v1.6.2
 [0m[91mgo: downloading github.com/spf13/pflag v1.0.1
+[0m[91mgo: downloading github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce
+go: downloading github.com/spf13/afero v1.1.1
 [0m[91mgo: downloading github.com/pelletier/go-toml v1.2.0
-[0m[91mgo: downloading github.com/spf13/cast v1.2.0
-[0m[91mgo: downloading golang.org/x/sys v0.0.0-20180724212812-e072cadbbdc8
-[0m[91mgo: downloading github.com/spf13/afero v1.1.1
+[0m[91mgo: downloading github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec
+go: downloading github.com/spf13/cast v1.2.0
+[0m[91mgo: downloading github.com/magiconair/properties v1.8.0
 [0m[91mgo: downloading gopkg.in/yaml.v2 v2.2.1
 [0m[91mgo: downloading github.com/mitchellh/mapstructure v0.0.0-20180715050151-f15292f7a699
+[0m[91mgo: downloading github.com/fsnotify/fsnotify v1.4.7
+[0m[91mgo: downloading golang.org/x/sys v0.0.0-20180724212812-e072cadbbdc8
 [0m[91mgo: downloading golang.org/x/text v0.3.0
-[0mRemoving intermediate container 9c389b5cc950
- ---> 2393a62c8d75
+[0mRemoving intermediate container 33e6f23a7dbf
+ ---> 9ab8ab3d14c5
 Step 10/18 : RUN swagger generate spec -o /swagger.json
- ---> Running in df0275e786ba
-Removing intermediate container df0275e786ba
- ---> 52fe208a830b
+ ---> Running in 4383d776373d
+Removing intermediate container 4383d776373d
+ ---> 467bf9226b75
 Step 11/18 : FROM alpine:latest
 latest: Pulling from library/alpine
 df20fa9351a1: Already exists
@@ -310,30 +388,30 @@ Digest: sha256:185518070891758909c9f839cf4ca393ee977ac378609f700f60a771a2dfe321
 Status: Downloaded newer image for alpine:latest
  ---> a24bb4013296
 Step 12/18 : WORKDIR /TechChallengeApp
- ---> Running in 3fa219e6f538
-Removing intermediate container 3fa219e6f538
- ---> 185757921c8f
+ ---> Running in f4c6dd04cf58
+Removing intermediate container f4c6dd04cf58
+ ---> c8529997ba4b
 Step 13/18 : COPY assets ./assets
- ---> 4f4802bead91
+ ---> 73b56063054f
 Step 14/18 : COPY conf.toml ./conf.toml
- ---> e28a8d476790
+ ---> fbcce73b29fe
 Step 15/18 : COPY --from=build /tmp/swagger/dist ./assets/swagger
- ---> c6ad88c15e26
+ ---> c388108dbbe6
 Step 16/18 : COPY --from=build /swagger.json ./assets/swagger/swagger.json
- ---> 3fd51d3d9b48
+ ---> 5699398b4641
 Step 17/18 : COPY --from=build /TechChallengeApp TechChallengeApp
- ---> 325703f359b3
+ ---> ac917df41e07
 Step 18/18 : ENTRYPOINT [ "./TechChallengeApp" ]
- ---> Running in 364cc328a855
-Removing intermediate container 364cc328a855
- ---> f9221055c834
-Successfully built f9221055c834
+ ---> Running in bd2748efcd08
+Removing intermediate container bd2748efcd08
+ ---> c8bb772d6971
+Successfully built c8bb772d6971
 Successfully tagged techchallengeapp:latest
 [Pipeline] }
 $ ssh-agent -k
 unset SSH_AUTH_SOCK;
 unset SSH_AGENT_PID;
-echo Agent pid 35647 killed;
+echo Agent pid 20955 killed;
 [ssh-agent] Stopped.
 [Pipeline] // sshagent
 [Pipeline] }
@@ -351,14 +429,14 @@ echo Agent pid 35647 killed;
 [ssh-agent] Looking for ssh-agent implementation...
 [ssh-agent]   Exec ssh-agent (binary ssh-agent on a remote machine)
 $ ssh-agent
-SSH_AUTH_SOCK=/tmp/ssh-XD3CnAQeaeSp/agent.35794
-SSH_AGENT_PID=35797
+SSH_AUTH_SOCK=/tmp/ssh-7mng5zB8hAdP/agent.21194
+SSH_AGENT_PID=21197
 Running ssh-add (command line suppressed)
-Identity added: /var/lib/jenkins/workspace/deploy-docker-image@tmp/private_key_1198254230405899950.key (/var/lib/jenkins/workspace/deploy-docker-image@tmp/private_key_1198254230405899950.key)
+Identity added: /var/lib/jenkins/workspace/deploy-docker-image@tmp/private_key_325723636450705793.key (/var/lib/jenkins/workspace/deploy-docker-image@tmp/private_key_325723636450705793.key)
 [ssh-agent] Started.
 [Pipeline] {
 [Pipeline] sh
-+ ssh -o StrictHostKeyChecking=no ec2-user@3.25.93.37 sudo docker run -d -P --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=changeme --name db postgres
++ ssh -o StrictHostKeyChecking=no ec2-user@54.252.225.196 sudo docker run -d -P --publish 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=changeme --name db postgres
 Unable to find image 'postgres:latest' locally
 latest: Pulling from library/postgres
 d121f8d1c412: Pulling fs layer
@@ -373,8 +451,8 @@ a5a0d51f9154: Pulling fs layer
 73e23a8be3f2: Pulling fs layer
 770413f2d2da: Pulling fs layer
 8ff552bf08c6: Pulling fs layer
-7f533d09024d: Pulling fs layer
-5a7614cf31d9: Pulling fs layer
+a367abe73a12: Pulling fs layer
+007c3a47b37e: Pulling fs layer
 54e26c2eb3f1: Waiting
 cede939c738e: Waiting
 69f99b2ba105: Waiting
@@ -384,8 +462,8 @@ a5a0d51f9154: Waiting
 73e23a8be3f2: Waiting
 770413f2d2da: Waiting
 8ff552bf08c6: Waiting
-7f533d09024d: Waiting
-5a7614cf31d9: Waiting
+a367abe73a12: Waiting
+007c3a47b37e: Waiting
 fa0c0f0a5534: Verifying Checksum
 fa0c0f0a5534: Download complete
 9f045f1653de: Verifying Checksum
@@ -402,22 +480,22 @@ cede939c738e: Download complete
 218ae2bec541: Download complete
 70a48a74e7cf: Verifying Checksum
 70a48a74e7cf: Download complete
-d121f8d1c412: Pull complete
 73e23a8be3f2: Verifying Checksum
 73e23a8be3f2: Download complete
 770413f2d2da: Verifying Checksum
 770413f2d2da: Download complete
+d121f8d1c412: Pull complete
 a5a0d51f9154: Verifying Checksum
 a5a0d51f9154: Download complete
 9f045f1653de: Pull complete
 fa0c0f0a5534: Pull complete
-54e26c2eb3f1: Pull complete
 8ff552bf08c6: Verifying Checksum
 8ff552bf08c6: Download complete
-5a7614cf31d9: Verifying Checksum
-5a7614cf31d9: Download complete
-7f533d09024d: Verifying Checksum
-7f533d09024d: Download complete
+54e26c2eb3f1: Pull complete
+a367abe73a12: Verifying Checksum
+a367abe73a12: Download complete
+007c3a47b37e: Verifying Checksum
+007c3a47b37e: Download complete
 cede939c738e: Pull complete
 69f99b2ba105: Pull complete
 218ae2bec541: Pull complete
@@ -426,13 +504,13 @@ a5a0d51f9154: Pull complete
 73e23a8be3f2: Pull complete
 770413f2d2da: Pull complete
 8ff552bf08c6: Pull complete
-7f533d09024d: Pull complete
-5a7614cf31d9: Pull complete
-Digest: sha256:880dc88e23f925ee2b9be3c38d92cf00a99c251e8801258151340c281b5699e7
+a367abe73a12: Pull complete
+007c3a47b37e: Pull complete
+Digest: sha256:91462e8207eadf217fe72822163277d189215b1f3792719f29352de5beb0ad53
 Status: Downloaded newer image for postgres:latest
-12077d74763a09da6f6f7643bd3124ada68a378e580061ca21419af3f33c1a15
+54a1d7f08dd91aa60187d9641b428d05ec8778401e62aede6a0881b3c5e10ffd
 [Pipeline] sh
-+ ssh -o StrictHostKeyChecking=no ec2-user@3.25.93.37 sudo docker run --net container:db techchallengeapp updatedb
++ ssh -o StrictHostKeyChecking=no ec2-user@54.252.225.196 sudo docker run --net container:db techchallengeapp updatedb
 Dropping and recreating database: app
 DROP DATABASE IF EXISTS app
 CREATE DATABASE app
@@ -449,6 +527,6 @@ DROP TABLE IF EXISTS tasks CASCADE
 CREATE TABLE tasks ( id SERIAL PRIMARY KEY, completed boolean NOT NULL, priority integer NOT NULL, title text NOT NULL)
 Seeding table with data
 [Pipeline] sh
-+ ssh -o StrictHostKeyChecking=no ec2-user@3.25.93.37 sudo docker run -p 3000:3000 techchallengeapp serve
-2020/09/13 14:23:42 Assets served from "assets".
-2020/09/13 14:23:42 Starting HTTP server on: localhost:3000
++ ssh -o StrictHostKeyChecking=no ec2-user@54.252.225.196 sudo docker run -p 3000:3000 techchallengeapp serve
+2020/09/19 07:02:38 Assets served from "assets".
+2020/09/19 07:02:38 Starting HTTP server on: localhost:3000
