@@ -82,7 +82,7 @@ agent any
                  
             when {
                        expression { params.ACTION == 'apply' }
-                }
+            }
      
                          
             steps{
@@ -104,6 +104,10 @@ agent any
       }
 
 stage("docker build image") {
+        
+      when {
+              expression { params.ACTION == 'apply' }
+      }
 
       steps {
 
@@ -128,6 +132,10 @@ stage("docker build image") {
     }
 
      stage("docker run containers") {
+             
+     when {
+               expression { params.ACTION == 'apply' }
+     }
 
      steps {
 
