@@ -92,7 +92,7 @@ agent any
                           //credentials -> secret file 
                           withCredentials([file(credentialsId: 'SSH-PRIVATE-KEY', variable: 'mySecret')]) {
     
-                                     println("Wait for 2min for ssh service to come up...")
+                                     println("Wait 2min for ssh service to come up...")
                                      sleep(120)
                                      sh """ ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i \"${DEPLOY_ENDPOINT}\", ./ansible/setup.yml --private-key \"${mySecret}\" --extra-vars="ansible_user=ec2-user" """  
                           }
